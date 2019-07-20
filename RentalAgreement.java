@@ -21,6 +21,7 @@ public class RentalAgreement {
     float finalCharge;
     Tool tool;
 
+    // constructor
     RentalAgreement(String tool_code, int numDays, int percentDiscount, LocalDate dateCheckedOut, Tool tool_){
         toolCode = tool_code;
         daysRented = numDays;
@@ -125,6 +126,20 @@ public class RentalAgreement {
         finalCharge = beforeDiscount - discountAmount;
     }
 
+    // calculates and modifies daysCharged
+    public void calculateChargeDays(){
+        // initialize daysCharged to daysRented then subtract holidays and weekends (if no charge)
+        daysCharged = daysRented;
+
+        // if no charge on holidays then subtract them from daysCharged (if any fall within rental period)
+        if (!tool.holidayCharge)
+            daysCharged -= numHolidays(dueDate);
+
+        // if no charge on weekends then subtract them from daysCharged (if they fall within rental period)
+        if (!tool.weekendCharge)
+            daysCharged -= numWeekendDays(checkoutDate, daysRented);
+    }
+
     // returns a RentalAgreement instance
     static public RentalAgreement checkout(String tool_code, int numDays, int percentDiscount, LocalDate dateCheckedOut){
         // throw exception if rental period is less than a day or if percentDiscount is out of bounds
@@ -135,19 +150,9 @@ public class RentalAgreement {
 
         // create Tool and RentalAgreement instances
         Tool tool = new Tool(tool_code);
-        RentalAgreement rental = new RentalAgreement(tool_code,numDays,percentDiscount,dateCheckedOut,tool);
+        RentalAgreement rental = new RentalAgreement(tool_code, numDays, percentDiscount, dateCheckedOut, tool);
 
-        // start with number of days in rental period
-        rental.daysCharged = numDays;
-
-        // if no charge on holidays then subtract them from daysCharged (if any fall within rental period)
-        if (!tool.holidayCharge)
-            rental.daysCharged -= rental.numHolidays(rental.dueDate);
-
-        // if no charge on weekends then subtract them from daysCharged (if they fall within rental period)
-        if (!tool.weekendCharge)
-            rental.daysCharged -= rental.numWeekendDays(dateCheckedOut, numDays);
-
+        rental.calculateChargeDays();
         rental.calculateTotal(rental.daysCharged);
         rental.printCheckout();
         return rental;
